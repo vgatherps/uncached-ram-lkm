@@ -98,7 +98,7 @@ static int buffer_alloc(struct buffer *buffer, int page_count)
 		
 		buffer->pages[i] = addr;
 		SetPageReserved(virt_to_page(addr));
-		if (set_memory_uc((unsigned long)addr, 1))
+		if (set_memory_wc((unsigned long)addr, 1))
 			break;
 	}
 	
@@ -183,13 +183,13 @@ static int device_op_mmap(struct file *file, struct vm_area_struct *vma)
 	if (ret)
 		return ret;
 
-	vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+	vma->vm_page_prot = pgprot_writecombine(vma->vm_page_prot);
 
 	ret = buffer_map_vma(&client->buffer, vma);
 	if (ret)
 		goto fail;
 
-	printk(KERN_INFO "uncached ram mmap successful\n");
+	printk(KERN_INFO "writecombining ram mmap successful\n");
 	return 0;
  fail:
 	buffer_destroy(&client->buffer);
